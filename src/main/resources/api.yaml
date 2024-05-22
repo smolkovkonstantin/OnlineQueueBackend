@@ -1,0 +1,564 @@
+openapi: 3.0.3
+info:
+  title: OnlineQueue
+  description: OnlineQueue Api
+  version: 1.0.0
+servers:
+  - url: 'http://localhost:8081'
+tags:
+  - name: queue
+    description: Everything about Queues
+  - name: user
+    description: Everything about Users
+  - name: auth
+    description: Everything about authorization
+paths:
+  /queue:
+    post:
+      tags:
+        - queue
+      summary: Create new queue
+      description: Create your own queue
+      operationId: createQueue
+      requestBody:
+        $ref: '#/components/requestBodies/QueueRequest'
+      responses:
+        '201':
+          $ref: '#/components/responses/QueueResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      security:
+        - OAuth2: [ write_queues, read_queues ]
+  /queue/{queueId}:
+    parameters:
+      - $ref: '#/components/parameters/queueId'
+    put:
+      tags:
+        - queue
+      summary: Update an existing queue
+      description: Update an existing queue by ID
+      operationId: updateQueue
+      requestBody:
+        $ref: '#/components/requestBodies/QueueUpdateRequest'
+      responses:
+        '200':
+          $ref: "#/components/responses/QueueResponse"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+        - OAuth2: [ write_queues, read_queues ]
+    get:
+      tags:
+        - queue
+      summary: Find queue by ID
+      description: Returns a single queue
+      operationId: getQueue
+      parameters:
+        - name: queueId
+          in: path
+          description: ID of queue
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          $ref: '#/components/responses/QueueResponseModel'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+        - OAuth2: [ read_queues ]
+    delete:
+      tags:
+        - queue
+      summary: Delete a queue
+      description: Delete a queue by ID
+      operationId: deleteQueue
+      responses:
+        '200':
+          description: Successful operation
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+        - OAuth2: [ write_queues, read_queues ]
+  /queue/{queueId}/user/{userId}:
+    post:
+      tags:
+        - queue
+        - user
+      description: entry in queue
+      summary: entry in queue
+      operationId: entryToQueue
+      parameters:
+        - $ref: '#/components/parameters/queueId'
+        - $ref: '#/components/parameters/userId'
+      requestBody:
+        description: request body for position in queue
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueuePositionRequest'
+      responses:
+        '200':
+          description: Successful operation
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags:
+        - queue
+        - user
+      description: exit from queue
+      summary: exit from queue
+      operationId: exitFromQueue
+      parameters:
+        - $ref: '#/components/parameters/queueId'
+        - $ref: '#/components/parameters/userId'
+      requestBody:
+        description: request body for position in queue
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueuePositionRequest'
+      responses:
+        '200':
+          description: Successful operation
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /auth/signUp:
+    post:
+      tags:
+        - auth
+      description: register new user
+      summary: user registration
+      operationId: signUp
+      requestBody:
+        required: true
+        description: request body for registration
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignUpRequest'
+      responses:
+        '201':
+          description: Successful operation
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /auth/signIn:
+    post:
+      tags:
+        - auth
+      description: user sign in
+      summary: user sign in
+      operationId: signIn
+      requestBody:
+        required: true
+        description: request body for sign in
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignInRequest'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SignInResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'        
+  /auth/signOut:
+    post:
+      tags:
+        - auth
+      description: logout user
+      summary: logout user
+      operationId: signOut
+      requestBody:
+        required: true
+        description: request body for sing out
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SingOutRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/Successful'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      security:
+        - OAuth2: [ write_queues, read_queues ]
+  /auth/refresh:
+    post:
+      tags:
+        - auth
+      description: refresh token
+      summary: refresh token
+      operationId: refresh
+      requestBody:
+        required: true
+        description: request body for refreshing token
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignInRequest'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JwtResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+components:
+  parameters:
+    queueId:
+      name: queueId
+      in: path
+      description: ID of queue
+      required: true
+      schema:
+        type: integer
+        format: int64
+    userId:
+      name: userId
+      in: path
+      description: ID of queue
+      required: true
+      schema:
+        type: integer
+        format: int64
+  requestBodies:
+    QueueRequest:
+      description: request body for create queue
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/QueueRequest"
+    QueueUpdateRequest:
+      description: request body for update queue
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/QueueUpdateRequest"
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: "message"
+          example: "Error"
+        dateTime:
+          type: string
+          description: "date time error"
+          example: "12.12.12 12:12:12"
+    QueueRequest:
+      type: object
+      required:
+        - user_id
+        - name
+        - description
+      properties:
+        userId:
+          type: integer
+          format: int64
+          description: user id
+          example: 1
+        name:
+          type: string
+          description: queue name
+          example: test name
+        description:
+          type: string
+          description: description for queue
+          example: test description
+        size:
+          type: integer
+          default: 100
+          example: 100
+        interval:
+          type: integer
+          example: 10
+        queueType:
+          $ref: '#/components/schemas/QueueTypeModel'
+    QueuePositionRequest:
+      type: object
+      required:
+        - position
+        - queueType
+      properties:
+        position:
+          type: integer
+          description: the position in queue that user wands to take
+        queueType:
+          $ref: '#/components/schemas/QueueTypeModel'
+    QueueTypeModel:
+      type: string
+      enum:
+      - simple_queue
+      - floating_queue
+      example: simple_queue
+    SignInRequest:
+      type: object
+      required:
+        - email
+        - password
+        - deviceId
+      properties:
+        email:
+          type: string
+          description: user email
+        password:
+          type: string
+          description: user password
+        deviceId:
+          type: string
+          description: fingerprint
+    SignUpRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        firstName:
+          type: string
+          description: user's first name
+        lastName:
+          type: string
+          description: user's last name
+        email:
+          type: string
+          description: user email
+        password:
+          type: string
+          description: user password
+        username:
+          type: string
+          description: unique username
+    SignInResponse:
+      type: object
+      required:
+        - accessToken
+      properties:
+        accessToken:
+          type: string
+          description: access token
+    SingOutRequest:
+      type: object
+      required:
+        - refreshToken
+      properties:
+        refreshToken:
+          type: string
+          description: refresh token
+    RefreshRequest:
+      type: object
+      required:
+        - refreshToken
+        - userId
+        - deviceId
+      properties:
+        userId:
+          type: integer
+          format: int64
+          description: user id from data base
+          example: 1
+        deviceId:
+          type: string
+          description: fingerprint
+    JwtResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          description: access token
+        refreshToken:
+          type: string
+          description: refresh token
+    QueueResponse:
+      type: object
+      properties:
+        queueId:
+          type: integer
+          format: int64
+          description: queue id in the database
+          example: 1
+        name:
+          type: string
+          description: queue name
+          example: test name
+        description:
+          type: string
+          description: description for queue
+          example: test description for queue
+        size:
+          type: integer
+          description: queue size
+          example: 20
+        startTime:
+          type: string
+          format: date-time
+          description: time when queue is start
+          example: "2024-02-30T08:30:00Z"
+        endTime:
+          type: string
+          format: date-time
+          description: time when queue is end
+          example: "2024-02-30T14:30:00Z"
+        interval:
+          type: integer
+          description: interval in minutes between two positions in queue
+          example: 20
+        openTimestamp:
+          type: string
+          format: date-time
+          description: time when queue open for entry
+          example: "2024-01-30T08:30:00Z"
+        ownerId:
+          type: integer
+          format: int64
+          description: id of the user from the database who owns the queue
+          example: 1
+    QueueUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: queue name
+          example: test name
+        description:
+          type: string
+          description: description for queue
+          example: test description for queue
+        size:
+          type: integer
+          description: queue size
+          example: 20
+        startTime:
+          type: string
+          format: date-time
+          description: time when queue is start
+          example: "2024-02-30T08:30:00Z"
+        endTime:
+          type: string
+          format: date-time
+          description: time when queue is end
+          example: "2024-02-30T14:30:00Z"
+        interval:
+          type: integer
+          description: interval in minutes between two positions in queue
+          example: 20
+        openTimestamp:
+          type: string
+          format: date-time
+          description: time when queue open for entry
+          example: "2024-01-30T08:30:00Z"
+        queueType:
+          $ref: '#/components/schemas/QueueTypeModel'
+    QueueResponseModel:
+      title: "QueueResponseModel"
+      type: object
+      properties:
+        queueSetting:
+          description: "Object with all queue settings"
+          $ref: "#/components/schemas/QueueResponse"
+        positions:
+          type: array
+          description: "positions in queue with details about user"
+          items:
+            $ref: "#/components/schemas/PositionModel"
+    PositionModel:
+      title: "PositionModel"
+      type: object
+      properties:
+        userId:
+          type: integer
+          format: int64
+          example: 1
+          description: "user id from DB"
+        firstName:
+          type: string
+          example: "firstName"
+        lastName:
+          type: string
+          example: "lastName"
+        position:
+          type: integer
+          example: 1
+          description: "user position in queue"
+  responses:
+    QueueResponse:
+      description: queue setting response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/QueueResponse'
+    QueueResponseModel:
+      description: queue setting response with all user in this queue
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/QueueResponseModel'
+    Successful:
+      description: Success operation
+    BadRequest:
+      description: Invalid input
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Unauthorized:
+      description: Request from an unauthorized user or invalid credentials
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: The specified resource was not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Forbidden:
+      description: User not have access rights to the requested resource
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      description: This API uses OAuth 2 with the implicit grant flow
+      flows:
+        implicit:
+          authorizationUrl: https://api.example.com/oauth2/authorize
+          scopes:
+            read_queues: read your queues
+            write_queues: modify queues in your account
+
+security:
+  - OAuth2:
+      - read_queues
+      - write_queues
+
