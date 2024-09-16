@@ -58,8 +58,8 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public JwtResponse updateToken(RefreshRequest refreshRequest, String refreshToken) {
-        var jwtupdateRequest = new JwtUpdateRequest(refreshToken);
+    public JwtResponse updateToken(RefreshRequest refreshRequest) {
+        var jwtupdateRequest = new JwtUpdateRequest(refreshRequest.getRefreshToken(), refreshRequest.getDeviceId());
 
         return jwtService.updateToken(jwtupdateRequest);
     }

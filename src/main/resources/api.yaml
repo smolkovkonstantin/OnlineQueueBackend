@@ -218,14 +218,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SignInRequest'
+              $ref: '#/components/schemas/RefreshRequest'
       responses:
         '200':
           description: Successful operation
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/JwtResponse'
+                $ref: '#/components/schemas/SignInResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
 
@@ -375,14 +375,11 @@ components:
       type: object
       required:
         - refreshToken
-        - userId
         - deviceId
       properties:
-        userId:
-          type: integer
-          format: int64
-          description: user id from data base
-          example: 1
+        refreshToken:
+          type: string
+          description: refresh token
         deviceId:
           type: string
           description: fingerprint

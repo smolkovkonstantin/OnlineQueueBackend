@@ -17,9 +17,6 @@ import org.online.queue.backend_java.security.services.AuthService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CookieValue;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
@@ -62,10 +59,10 @@ public class AuthControllerImpl implements AuthApi {
         return AuthApi.super.signOut(singOutRequest);
     }
 
-    @PostMapping("/auth/refresh")
-    public ResponseEntity<SignInResponse> updateToken(@RequestBody RefreshRequest refreshRequest,
-                                                      @CookieValue("refresh_token") String refreshToken) {
-        var jwtResponse = authService.updateToken(refreshRequest, refreshToken);
+
+    @Override
+    public ResponseEntity<SignInResponse> refresh(RefreshRequest refreshRequest) {
+        var jwtResponse = authService.updateToken(refreshRequest);
 
         log.info(LogMessage.UPDATE_TOKEN.create());
 
@@ -73,10 +70,9 @@ public class AuthControllerImpl implements AuthApi {
     }
 
     private ResponseEntity<SignInResponse> buildResponseEntity(JwtResponse jwtResponse) {
-        var jwtResponseBody = jwtResponse;
 
-        var headers = buildHttpHeaders(jwtResponseBody.getRefreshToken());
-        var signInResponse = new SignInResponse(jwtResponseBody.getAccessToken());
+        var headers = buildHttpHeaders(jwtResponse.getRefreshToken());
+        var signInResponse = new SignInResponse(jwtResponse.getAccessToken());
 
         return ResponseEntity.ok()
                 .headers(headers)

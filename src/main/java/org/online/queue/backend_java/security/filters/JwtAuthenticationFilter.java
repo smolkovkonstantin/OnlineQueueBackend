@@ -45,14 +45,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         var accessToken = authHeader.substring(BEGIN_INDEX);
 
-        var userId = checkJwtToken(accessToken);
+        var userId = validateToken(accessToken);
 
         setAuthentication(request, userId);
 
         filterChain.doFilter(request, response);
     }
 
-    private Long checkJwtToken(String accessToken) {
+    private Long validateToken(String accessToken) {
 
         var jwtValidateRequest = new JwtValidateRequest(accessToken);
 

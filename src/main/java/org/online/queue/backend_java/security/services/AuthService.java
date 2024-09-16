@@ -11,5 +11,5 @@ public interface AuthService {
 
     JwtResponse signIn(SignInDto signInResponse);
 
-    JwtResponse updateToken(RefreshRequest refreshRequest, String refreshToken);
+    JwtResponse updateToken(RefreshRequest refreshRequest);
 }

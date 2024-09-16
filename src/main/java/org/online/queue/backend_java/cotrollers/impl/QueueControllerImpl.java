@@ -3,6 +3,7 @@ package org.online.queue.backend_java.cotrollers.impl;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.online.queue.backend_java.controllers.api.QueueApi;
 import org.online.queue.backend_java.models.QueuePositionRequest;
 import org.online.queue.backend_java.models.QueueRequest;
@@ -14,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)

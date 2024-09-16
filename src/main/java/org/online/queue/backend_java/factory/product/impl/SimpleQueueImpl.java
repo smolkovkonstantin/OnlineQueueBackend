@@ -38,8 +38,8 @@ public class SimpleQueueImpl extends QueueAbstract {
         this.buildQueue(queueDto, queue);
 
         var account = queueDto.getAccount();
-        var owner_id = account.getId();
-        queue.setOwnerId(owner_id);
+        var ownerId = account.getId();
+        queue.setOwnerId(ownerId);
 
         saveQueue(queue);
 

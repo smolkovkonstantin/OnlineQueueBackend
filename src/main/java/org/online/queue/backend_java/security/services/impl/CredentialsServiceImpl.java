@@ -65,7 +65,7 @@ public class CredentialsServiceImpl implements CredentialsService {
     @Override
     public Credentials getCredentials(Long userId) {
         return credentialsRepository.findById(userId).orElseThrow(() ->
-                new NotFoundException(ErrorMessage.USER_NOT_FOUND_BY_EMAIL.createResponseModel(userId)));
+                new NotFoundException(ErrorMessage.USER_NOT_FOUND_BY_ID.createResponseModel(userId)));
     }
 
     @Override
