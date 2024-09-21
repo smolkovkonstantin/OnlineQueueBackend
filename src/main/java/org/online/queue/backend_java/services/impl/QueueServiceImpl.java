@@ -16,12 +16,11 @@ import org.online.queue.backend_java.models.QueueTypeModel;
 import org.online.queue.backend_java.models.QueueUpdateRequest;
 import org.online.queue.backend_java.models.dto.QueueDto;
 import org.online.queue.backend_java.models.dto.QueuePositionDto;
-import org.online.queue.backend_java.services.queue.QueueInterface;
 import org.online.queue.backend_java.repositories.QueueRepository;
 import org.online.queue.backend_java.services.AccountService;
 import org.online.queue.backend_java.services.QueueService;
+import org.online.queue.backend_java.services.queue.QueueInterface;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;

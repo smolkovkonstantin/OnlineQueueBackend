@@ -2,7 +2,6 @@ package org.online.queue.backend_java.models.dto;
 
 import lombok.Builder;
 import lombok.Value;
-import org.online.queue.backend_java.enums.QueueType;
 import org.online.queue.backend_java.models.Account;
 
 import java.time.ZonedDateTime;
