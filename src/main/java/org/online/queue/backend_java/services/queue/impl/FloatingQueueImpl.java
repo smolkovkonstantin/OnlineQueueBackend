@@ -1,40 +1,37 @@
-package org.online.queue.backend_java.factory.product.impl;
+package org.online.queue.backend_java.services.queue.impl;
 
 
 import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.online.queue.backend_java.enums.ActionQueue;
 import org.online.queue.backend_java.enums.ErrorMessage;
 import org.online.queue.backend_java.exception.ConflictException;
-import org.online.queue.backend_java.factory.product.QueueAbstract;
-import org.online.queue.backend_java.mappers.QueueMapper;
+import org.online.queue.backend_java.exception.NotFoundException;
 import org.online.queue.backend_java.models.Account;
 import org.online.queue.backend_java.models.Position;
 import org.online.queue.backend_java.models.Queue;
-import org.online.queue.backend_java.models.QueueResponse;
 import org.online.queue.backend_java.models.dto.QueueDto;
 import org.online.queue.backend_java.models.dto.QueuePositionDto;
+import org.online.queue.backend_java.services.queue.QueueInterface;
 import org.online.queue.backend_java.repositories.PositionRepository;
 import org.online.queue.backend_java.repositories.QueueRepository;
-import org.online.queue.backend_java.services.QueueLogService;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.stereotype.Component;
 
+@Component("FLOATING_QUEUE")
+@CacheConfig(cacheNames = "queue")
+@RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public class FloatingQueueImpl extends QueueAbstract {
+public class FloatingQueueImpl implements QueueInterface {
 
-    QueueMapper queueMapper;
     PositionRepository positionRepository;
-
-    public FloatingQueueImpl(QueueRepository queueRepository,
-                             PositionRepository positionRepository,
-                             QueueMapper queueMapper, QueueLogService queueLogService) {
-        super(queueRepository, positionRepository, queueLogService);
-        this.queueMapper = queueMapper;
-        this.positionRepository = positionRepository;
-    }
+    QueueRepository queueRepository;
 
     @Override
-    public QueueResponse create(QueueDto queueDto) {
+    @CachePut(key = "#queueDto.queueId")
+    public Queue create(QueueDto queueDto) {
         checkInterval(queueDto.getInterval());
 
         var queue = new Queue();
@@ -45,25 +42,23 @@ public class FloatingQueueImpl extends QueueAbstract {
         var ownerId = account.getId();
         queue.setOwnerId(ownerId);
 
-        saveQueue(queue);
-
-        super.logAction(queue, ActionQueue.CREATE_QUEUE.set(queue.getName()));
-
-        return queueMapper.queueToQueueResponse(queue);
+        return save(queue);
     }
 
     @Override
-    @Transactional
-    public QueueResponse update(QueueDto queueDto) {
+    @CachePut(key = "#queueDto.queueId")
+    public Queue update(QueueDto queueDto) {
         var interval = queueDto.getInterval();
 
         checkInterval(interval);
 
-        var queue = getQueue(queueDto.getQueueId());
+        var id = queueDto.getQueueId();
+
+        var queue = getQueue(id);
 
         this.buildQueue(queueDto, queue);
 
-        return queueMapper.queueToQueueResponse(queue);
+        return queue;
     }
 
     private void buildQueue(QueueDto queueDto, Queue queue) {
@@ -83,12 +78,12 @@ public class FloatingQueueImpl extends QueueAbstract {
     }
 
     @Override
-    @Transactional
-    public void addUser(QueuePositionDto queuePositionDto) {
+    @CachePut(key = "#queuePositionDto.queueId")
+    public Queue addUser(QueuePositionDto queuePositionDto) {
 
         var queueNumber = queuePositionDto.getQueueNumber();
 
-        var queue = getQueueWithPositions(queuePositionDto.getQueueId());
+        var queue = getQueue(queuePositionDto.getQueueId());
 
         checkQueueNumber(queue.getSize(), queueNumber);
 
@@ -99,13 +94,9 @@ public class FloatingQueueImpl extends QueueAbstract {
         account.getPositions().add(position);
         queue.getPositions().add(position);
 
-        super.savePosition(position);
+        positionRepository.saveAndFlush(position);
 
-        super.logAction(queue, ActionQueue.USER_ENTER_TO_QUEUE.set(
-                account.getFirstName(),
-                queue.getName(),
-                queueNumber
-        ));
+        return queue;
     }
 
     void checkQueueNumber(Integer size, Integer queueNumber) {
@@ -133,17 +124,44 @@ public class FloatingQueueImpl extends QueueAbstract {
     }
 
     @Override
-    @Transactional
-    public void deleteUser(QueuePositionDto queuePositionDto) {
+    @CachePut(key = "#queuePositionDto.queueId")
+    public Queue deleteUser(QueuePositionDto queuePositionDto) {
         var queueNumber = queuePositionDto.getQueueNumber();
 
-        var queue = getQueueWithPositions(queuePositionDto.getQueueId());
+        var queue = getQueue(queuePositionDto.getQueueId());
         var account = queuePositionDto.getAccount();
         var position = getPosition(queue, account.getId(), queueNumber);
 
-        super.deletePosition(position);
+        positionRepository.deleteById(position.getId());
 
         account.getPositions().remove(position);
         queue.getPositions().remove(position);
+
+        return save(queue);
+    }
+
+    private Queue getQueue(Long id) {
+        return queueRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException(ErrorMessage.QUEUE_NOT_FOUND.createResponseModel(id)));
+    }
+
+    @Override
+    @Cacheable
+    public Queue getCachedQueue(Long id) {
+        return queueRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException(ErrorMessage.QUEUE_NOT_FOUND.createResponseModel(id)));
+    }
+
+    private Queue save(Queue queue) {
+        return queueRepository.saveAndFlush(queue);
+    }
+
+    private Position getPosition(Queue queue, Long accountId, Integer queueNumber) {
+        var opPosition = positionRepository.findByQueueIdAndAccountIdAndQueueNumber(queue.getId(), accountId, queueNumber);
+
+        if (opPosition.isEmpty()) {
+            throw new ConflictException(ErrorMessage.POSITION_IS_NOT_EXISTS.createResponseModel(queueNumber, queue.getId()));
+        }
+        return opPosition.get();
     }
 }

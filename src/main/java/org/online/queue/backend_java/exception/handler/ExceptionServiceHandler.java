@@ -1,6 +1,8 @@
 package org.online.queue.backend_java.exception.handler;
 
+import feign.FeignException;
 import lombok.extern.slf4j.Slf4j;
+import org.online.queue.backend_java.enums.ErrorMessage;
 import org.online.queue.backend_java.exception.ConflictException;
 import org.online.queue.backend_java.exception.ForbiddenException;
 import org.online.queue.backend_java.exception.NotFoundException;
@@ -30,6 +32,15 @@ public class ExceptionServiceHandler {
     public ResponseEntity<ErrorResponse> handleForbiddenException(ForbiddenException exception) {
         log.error(exception.getMessage());
         return createResponse(exception.getErrorResponse(), HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler(FeignException.class)
+    public ResponseEntity<ErrorResponse> handleFeignException(FeignException exception) {
+
+        var errorResponse = ErrorMessage.INTEGRATION_SERVICE_EXCEPTION.createResponseModel(exception.getMessage());
+
+        log.error(errorResponse.getMessage());
+        return createResponse(errorResponse, HttpStatus.FORBIDDEN);
     }
 
     private ResponseEntity<ErrorResponse> createResponse(ErrorResponse errorResponse,

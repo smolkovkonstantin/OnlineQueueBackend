@@ -50,6 +50,7 @@ public class QueueControllerImpl implements QueueApi {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    @Override
     public ResponseEntity<Void> exitFromQueue(Long queueId,
                                               Long userId,
                                               QueuePositionRequest queuePositionRequest) {

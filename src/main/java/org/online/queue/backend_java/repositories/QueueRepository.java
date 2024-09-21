@@ -9,9 +9,6 @@ import java.util.Optional;
 
 @Repository
 public interface QueueRepository extends JpaRepository<Queue, Long> {
-    @Query("SELECT q FROM Queue q LEFT JOIN FETCH q.positions WHERE q.id = :queueId")
-    Optional<Queue> findByIdWithPositions(Long queueId);
 
-    @Query("SELECT q FROM Queue q LEFT JOIN FETCH q.positions positions WHERE q.id = :queueId order by positions.queueNumber")
-    Optional<Queue> findByIdWithPositionsAscByQueueNumber(Long queueId);
+    Optional<Queue> findByIdOrderByPositionsQueueNumber(Long queueId);
 }

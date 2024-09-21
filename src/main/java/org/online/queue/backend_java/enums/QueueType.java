@@ -4,4 +4,5 @@ public enum QueueType {
 
     SIMPLE_QUEUE,
     FLOATING_QUEUE,
+    ANY_QUEUE,
 }

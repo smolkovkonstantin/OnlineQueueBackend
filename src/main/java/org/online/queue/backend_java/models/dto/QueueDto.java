@@ -16,7 +16,6 @@ public class QueueDto {
     String description;
     Integer size;
     Integer interval;
-    QueueType queueType;
     ZonedDateTime startTime;
     ZonedDateTime endTime;
     ZonedDateTime openTimestamp;

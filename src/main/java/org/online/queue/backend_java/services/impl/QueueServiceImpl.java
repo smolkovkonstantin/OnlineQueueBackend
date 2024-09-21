@@ -7,7 +7,6 @@ import org.online.queue.backend_java.enums.ErrorMessage;
 import org.online.queue.backend_java.enums.QueueType;
 import org.online.queue.backend_java.exception.ConflictException;
 import org.online.queue.backend_java.exception.NotFoundException;
-import org.online.queue.backend_java.factory.QueueAbstractFactory;
 import org.online.queue.backend_java.mappers.QueueMapper;
 import org.online.queue.backend_java.models.QueuePositionRequest;
 import org.online.queue.backend_java.models.QueueRequest;
@@ -17,17 +16,22 @@ import org.online.queue.backend_java.models.QueueTypeModel;
 import org.online.queue.backend_java.models.QueueUpdateRequest;
 import org.online.queue.backend_java.models.dto.QueueDto;
 import org.online.queue.backend_java.models.dto.QueuePositionDto;
+import org.online.queue.backend_java.services.queue.QueueInterface;
 import org.online.queue.backend_java.repositories.QueueRepository;
 import org.online.queue.backend_java.services.AccountService;
 import org.online.queue.backend_java.services.QueueService;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.stereotype.Service;
+
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class QueueServiceImpl implements QueueService {
 
-    QueueAbstractFactory queueAbstractFactory;
+    Map<String, QueueInterface> queueImpls;
     AccountService accountService;
     QueueRepository queueRepository;
     QueueMapper queueMapper;
@@ -38,7 +42,7 @@ public class QueueServiceImpl implements QueueService {
 
         var queueType = getQueueType(queueRequest.getQueueType());
 
-        var queueImpl = queueAbstractFactory.get(queueType);
+        var queueImpl = queueImpls.get(queueType.name());
 
         var queueDto = QueueDto.builder()
                 .account(account)
@@ -46,18 +50,18 @@ public class QueueServiceImpl implements QueueService {
                 .description(queueRequest.getDescription())
                 .size(queueRequest.getSize())
                 .interval(queueRequest.getInterval())
-                .queueType(queueType)
                 .build();
-        var createQueueResponse = queueImpl.create(queueDto);
 
-        return createQueueResponse;
+        var queue = queueImpl.create(queueDto);
+
+        return queueMapper.queueToQueueResponse(queue);
     }
 
     @Override
     public QueueResponse update(QueueUpdateRequest queueUpdateRequest, Long queueId) {
         var queueType = getQueueType(queueUpdateRequest.getQueueType());
 
-        var queueImpl = queueAbstractFactory.get(queueType);
+        var queueImpl = queueImpls.get(queueType.name());
 
         var queueDto = QueueDto.builder()
                 .queueId(queueId)
@@ -65,15 +69,15 @@ public class QueueServiceImpl implements QueueService {
                 .description(queueUpdateRequest.getDescription())
                 .size(queueUpdateRequest.getSize())
                 .interval(queueUpdateRequest.getInterval())
-                .queueType(queueType)
                 .build();
 
-        var updateQueueResponse = queueImpl.update(queueDto);
+        var queue = queueImpl.update(queueDto);
 
-        return updateQueueResponse;
+        return queueMapper.queueToQueueResponse(queue);
     }
 
     @Override
+    @CacheEvict("queue")
     public void delete(Long queueId) {
 
         var account = accountService.getAccountWithCredentials();
@@ -93,7 +97,7 @@ public class QueueServiceImpl implements QueueService {
         var account = accountService.getAccountWithPositions(userId);
         var queueType = getQueueType(queuePositionRequest.getQueueType());
 
-        var queueImpl = queueAbstractFactory.get(queueType);
+        var queueImpl = queueImpls.get(queueType.name());
 
         var entryQueueDto = QueuePositionDto.builder()
                 .queueId(queueId)
@@ -109,7 +113,7 @@ public class QueueServiceImpl implements QueueService {
         var account = accountService.getAccountWithPositionsAndCredentials(userId);
         var queueType = getQueueType(queuePositionRequest.getQueueType());
 
-        var queueImpl = queueAbstractFactory.get(queueType);
+        var queueImpl = queueImpls.get(queueType.name());
 
         var entryQueueDto = QueuePositionDto.builder()
                 .queueId(queueId)
@@ -122,8 +126,10 @@ public class QueueServiceImpl implements QueueService {
 
     @Override
     public QueueResponseModel getQueue(Long queueId) {
-        var queue = queueRepository.findByIdWithPositionsAscByQueueNumber(queueId)
-                .orElseThrow(() -> new NotFoundException(ErrorMessage.QUEUE_NOT_FOUND.createResponseModel(queueId)));
+
+        var queueImpl = queueImpls.get(QueueType.SIMPLE_QUEUE.name());
+
+        var queue = queueImpl.getCachedQueue(queueId);
 
         return queueMapper.queueToQueueResponseModel(queue);
     }
