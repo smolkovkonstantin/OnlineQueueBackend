@@ -54,7 +54,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private Long validateToken(String accessToken) {
 
-        var jwtValidateRequest = new JwtValidateRequest(accessToken);
+        var jwtValidateRequest = new JwtValidateRequest();
+        jwtValidateRequest.setAccessToken(accessToken);
 
         var response = jwtService.validateToken(jwtValidateRequest);
 

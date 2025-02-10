@@ -19,6 +19,7 @@ import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component("SIMPLE_QUEUE")
 @CacheConfig(cacheNames = "queue")
@@ -34,6 +35,7 @@ public class SimpleQueueImpl implements QueueInterface {
     QueueLogService queueLogService;
 
     @Override
+    @Transactional
     @CachePut(key = "#queueDto.queueId")
     public Queue create(QueueDto queueDto) {
         var queue = new Queue();
@@ -116,14 +118,14 @@ public class SimpleQueueImpl implements QueueInterface {
     }
 
     private Queue getQueue(Long queueId) {
-        return queueRepository.findById(queueId)
+        return queueRepository.findByIdOrderByPositionsQueueNumber(queueId)
                 .orElseThrow(() -> new NotFoundException(ErrorMessage.QUEUE_NOT_FOUND.createResponseModel(queueId)));
     }
 
     @Override
     @Cacheable
     public Queue getCachedQueue(Long id) {
-        return queueRepository.findById(id)
+        return queueRepository.findByIdOrderByPositionsQueueNumber(id)
                 .orElseThrow(() -> new NotFoundException(ErrorMessage.QUEUE_NOT_FOUND.createResponseModel(id)));
     }
 

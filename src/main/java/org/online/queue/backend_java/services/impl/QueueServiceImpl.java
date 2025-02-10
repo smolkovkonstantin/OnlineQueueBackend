@@ -22,6 +22,7 @@ import org.online.queue.backend_java.services.QueueService;
 import org.online.queue.backend_java.services.queue.QueueInterface;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
 
@@ -124,6 +125,7 @@ public class QueueServiceImpl implements QueueService {
     }
 
     @Override
+    @Transactional
     public QueueResponseModel getQueue(Long queueId) {
 
         var queueImpl = queueImpls.get(QueueType.SIMPLE_QUEUE.name());

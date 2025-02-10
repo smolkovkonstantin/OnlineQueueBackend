@@ -14,6 +14,7 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldDefaults;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 @Entity
@@ -22,7 +23,7 @@ import java.util.Objects;
 @Accessors(chain = true)
 @Table(name = "position", schema = "main")
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class Position {
+public class Position implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

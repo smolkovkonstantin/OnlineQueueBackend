@@ -14,6 +14,7 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldDefaults;
 
+import java.io.Serializable;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +26,7 @@ import java.util.Objects;
 @Accessors(chain = true)
 @Table(name = "queue", schema = "main")
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class Queue {
+public class Queue implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -18,6 +18,7 @@ import lombok.experimental.FieldDefaults;
 
 import org.online.queue.backend_java.security.models.Credentials;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,7 +28,7 @@ import java.util.List;
 @Accessors(chain = true)
 @Table(name = "account", schema = "main")
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class Account {
+public class Account implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

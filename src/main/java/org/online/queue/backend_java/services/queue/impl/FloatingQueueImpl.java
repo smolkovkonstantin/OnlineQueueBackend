@@ -19,6 +19,7 @@ import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component("FLOATING_QUEUE")
 @CacheConfig(cacheNames = "queue")
@@ -30,6 +31,7 @@ public class FloatingQueueImpl implements QueueInterface {
     QueueRepository queueRepository;
 
     @Override
+    @Transactional
     @CachePut(key = "#queueDto.queueId")
     public Queue create(QueueDto queueDto) {
         checkInterval(queueDto.getInterval());
@@ -141,14 +143,14 @@ public class FloatingQueueImpl implements QueueInterface {
     }
 
     private Queue getQueue(Long id) {
-        return queueRepository.findById(id)
+        return queueRepository.findByIdOrderByPositionsQueueNumber(id)
                 .orElseThrow(() -> new NotFoundException(ErrorMessage.QUEUE_NOT_FOUND.createResponseModel(id)));
     }
 
     @Override
     @Cacheable
     public Queue getCachedQueue(Long id) {
-        return queueRepository.findById(id)
+        return queueRepository.findByIdOrderByPositionsQueueNumber(id)
                 .orElseThrow(() -> new NotFoundException(ErrorMessage.QUEUE_NOT_FOUND.createResponseModel(id)));
     }
 

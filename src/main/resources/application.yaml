@@ -20,7 +20,7 @@ spring:
             loggerLevel: full
 server:
   port: 8083
-
-#logging:
-#  level:
-#    root: DEBUG
+redis:
+  host: localhost
+  port: 6381
+  ttl: 10
