@@ -20,7 +20,6 @@ import org.online.queue.backend_java.repositories.QueueRepository;
 import org.online.queue.backend_java.services.AccountService;
 import org.online.queue.backend_java.services.QueueService;
 import org.online.queue.backend_java.services.queue.QueueInterface;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,7 +37,7 @@ public class QueueServiceImpl implements QueueService {
 
     @Override
     public QueueResponse create(QueueRequest queueRequest) {
-        var account = accountService.getAccount(queueRequest.getUserId());
+        var account = accountService.getAccountWithCredentials(queueRequest.getUserId());
 
         var queueType = getQueueType(queueRequest.getQueueType());
 
@@ -58,7 +57,8 @@ public class QueueServiceImpl implements QueueService {
     }
 
     @Override
-    public QueueResponse update(QueueUpdateRequest queueUpdateRequest, Long queueId) {
+    @Transactional
+    public void update(QueueUpdateRequest queueUpdateRequest, Long queueId) {
         var queueType = getQueueType(queueUpdateRequest.getQueueType());
 
         var queueImpl = queueImpls.get(queueType.name());
@@ -73,11 +73,14 @@ public class QueueServiceImpl implements QueueService {
 
         var queue = queueImpl.update(queueDto);
 
-        return queueMapper.queueToQueueResponse(queue);
+        var account = accountService.getAccountWithCredentials();
+
+        if (!queue.getOwnerId().equals(account.getId())) {
+            throw new ConflictException(ErrorMessage.PERMISSION_EXCEPTION.createResponseModel());
+        }
     }
 
     @Override
-    @CacheEvict("queue")
     public void delete(Long queueId) {
 
         var account = accountService.getAccountWithCredentials();
@@ -94,7 +97,7 @@ public class QueueServiceImpl implements QueueService {
 
     @Override
     public void entryInQueue(Long queueId, Long userId, QueuePositionRequest queuePositionRequest) {
-        var account = accountService.getAccountWithPositions(userId);
+        var account = accountService.getAccountWithPositionsAndCredentials(userId);
         var queueType = getQueueType(queuePositionRequest.getQueueType());
 
         var queueImpl = queueImpls.get(queueType.name());
@@ -128,9 +131,8 @@ public class QueueServiceImpl implements QueueService {
     @Transactional
     public QueueResponseModel getQueue(Long queueId) {
 
-        var queueImpl = queueImpls.get(QueueType.SIMPLE_QUEUE.name());
-
-        var queue = queueImpl.getCachedQueue(queueId);
+        var queue = queueRepository.findByIdOrderByPositionsQueueNumber(queueId)
+                .orElseThrow(() -> new NotFoundException(ErrorMessage.QUEUE_NOT_FOUND.createResponseModel(queueId)));
 
         return queueMapper.queueToQueueResponseModel(queue);
     }

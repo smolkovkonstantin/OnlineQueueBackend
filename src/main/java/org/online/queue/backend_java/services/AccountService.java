@@ -15,4 +15,6 @@ public interface AccountService {
     Account getAccountWithPositions(Long id);
 
     Account getAccountWithCredentials();
+
+    Account getAccountWithCredentials(Long accountId);
 }

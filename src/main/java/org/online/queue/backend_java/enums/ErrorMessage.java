@@ -27,7 +27,7 @@ public enum ErrorMessage {
     INTERVAL_EXCEPTION("Interval must be equals or greater zero, but was %s"),
     DUPLICATE_EMAIL("Account with this email already exists"),
     DUPLICATE_USERNAME("Account with this username already exists"),
-    ATTEMPT_TO_DO_SOMETHING_WITH_ANOTHER_ACCOUNT("An attempt to interact with someone other than your account"),
+    PERMISSION_EXCEPTION("You don't have permission to do this"),
     ATTEMPT_TO_DELETE_QUEUE_BY_NOT_OWNER("The attempt to delete the queue is not by the owner");
 
     private final String errorMessage;
@@ -36,10 +36,8 @@ public enum ErrorMessage {
         var message = String.format(this.errorMessage, values);
         var dateTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss"));
 
-        var response = new ErrorResponse()
+        return new ErrorResponse()
                 .message(message)
                 .dateTime(dateTime);
-
-        return response;
     }
 }

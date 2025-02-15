@@ -1,9 +1,7 @@
 package org.online.queue.backend_java.services.queue.impl;
 
 
-import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
 import org.online.queue.backend_java.enums.ErrorMessage;
 import org.online.queue.backend_java.exception.ConflictException;
 import org.online.queue.backend_java.exception.NotFoundException;
@@ -12,27 +10,26 @@ import org.online.queue.backend_java.models.Position;
 import org.online.queue.backend_java.models.Queue;
 import org.online.queue.backend_java.models.dto.QueueDto;
 import org.online.queue.backend_java.models.dto.QueuePositionDto;
-import org.online.queue.backend_java.services.queue.QueueInterface;
 import org.online.queue.backend_java.repositories.PositionRepository;
 import org.online.queue.backend_java.repositories.QueueRepository;
-import org.springframework.cache.annotation.CacheConfig;
-import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
+import org.online.queue.backend_java.services.queue.QueueInterface;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 @Component("FLOATING_QUEUE")
-@CacheConfig(cacheNames = "queue")
 @RequiredArgsConstructor
-@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class FloatingQueueImpl implements QueueInterface {
 
-    PositionRepository positionRepository;
-    QueueRepository queueRepository;
+    private final PositionRepository positionRepository;
+    private final QueueRepository queueRepository;
+
+
+    private final static Integer DEFAULT_SIZE = 100;
 
     @Override
     @Transactional
-    @CachePut(key = "#queueDto.queueId")
     public Queue create(QueueDto queueDto) {
         checkInterval(queueDto.getInterval());
 
@@ -48,7 +45,6 @@ public class FloatingQueueImpl implements QueueInterface {
     }
 
     @Override
-    @CachePut(key = "#queueDto.queueId")
     public Queue update(QueueDto queueDto) {
         var interval = queueDto.getInterval();
 
@@ -66,7 +62,7 @@ public class FloatingQueueImpl implements QueueInterface {
     private void buildQueue(QueueDto queueDto, Queue queue) {
         queue.setName(queueDto.getQueueName())
                 .setDescription(queueDto.getDescription())
-                .setSize(queueDto.getSize())
+                .setSize(Optional.ofNullable(queueDto.getSize()).orElse(DEFAULT_SIZE))
                 .setStartTime(queueDto.getStartTime())
                 .setEndTime(queueDto.getEndTime())
                 .setInterval(queueDto.getInterval())
@@ -80,8 +76,7 @@ public class FloatingQueueImpl implements QueueInterface {
     }
 
     @Override
-    @CachePut(key = "#queuePositionDto.queueId")
-    public Queue addUser(QueuePositionDto queuePositionDto) {
+    public void addUser(QueuePositionDto queuePositionDto) {
 
         var queueNumber = queuePositionDto.getQueueNumber();
 
@@ -97,8 +92,6 @@ public class FloatingQueueImpl implements QueueInterface {
         queue.getPositions().add(position);
 
         positionRepository.saveAndFlush(position);
-
-        return queue;
     }
 
     void checkQueueNumber(Integer size, Integer queueNumber) {
@@ -126,8 +119,7 @@ public class FloatingQueueImpl implements QueueInterface {
     }
 
     @Override
-    @CachePut(key = "#queuePositionDto.queueId")
-    public Queue deleteUser(QueuePositionDto queuePositionDto) {
+    public void deleteUser(QueuePositionDto queuePositionDto) {
         var queueNumber = queuePositionDto.getQueueNumber();
 
         var queue = getQueue(queuePositionDto.getQueueId());
@@ -138,18 +130,9 @@ public class FloatingQueueImpl implements QueueInterface {
 
         account.getPositions().remove(position);
         queue.getPositions().remove(position);
-
-        return save(queue);
     }
 
     private Queue getQueue(Long id) {
-        return queueRepository.findByIdOrderByPositionsQueueNumber(id)
-                .orElseThrow(() -> new NotFoundException(ErrorMessage.QUEUE_NOT_FOUND.createResponseModel(id)));
-    }
-
-    @Override
-    @Cacheable
-    public Queue getCachedQueue(Long id) {
         return queueRepository.findByIdOrderByPositionsQueueNumber(id)
                 .orElseThrow(() -> new NotFoundException(ErrorMessage.QUEUE_NOT_FOUND.createResponseModel(id)));
     }

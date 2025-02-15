@@ -44,7 +44,7 @@ paths:
         $ref: '#/components/requestBodies/QueueUpdateRequest'
       responses:
         '200':
-          $ref: "#/components/responses/QueueResponse"
+          description: Successful operation
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -97,17 +97,13 @@ paths:
           $ref: '#/components/responses/NotFound'
       security:
         - OAuth2: [ write_queues, read_queues ]
-  /queue/{queueId}/user/{userId}:
-    post:
+    patch:
       tags:
         - queue
-        - user
-      description: entry in queue
-      summary: entry in queue
-      operationId: entryToQueue
+      summary: entry in queue or exit from queue
+      operationId: patchQueue
       parameters:
         - $ref: '#/components/parameters/queueId'
-        - $ref: '#/components/parameters/userId'
       requestBody:
         description: request body for position in queue
         content:
@@ -119,27 +115,8 @@ paths:
           description: Successful operation
         '404':
           $ref: '#/components/responses/NotFound'
-    delete:
-      tags:
-        - queue
-        - user
-      description: exit from queue
-      summary: exit from queue
-      operationId: exitFromQueue
-      parameters:
-        - $ref: '#/components/parameters/queueId'
-        - $ref: '#/components/parameters/userId'
-      requestBody:
-        description: request body for position in queue
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/QueuePositionRequest'
-      responses:
-        '200':
-          description: Successful operation
-        '404':
-          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /auth/signUp:
     post:
       tags:
@@ -306,18 +283,32 @@ components:
       required:
         - position
         - queueType
+        - action
+        - accountId
       properties:
         position:
           type: integer
           description: the position in queue that user wands to take
+        accountId:
+          type: integer
+          format: int64
+          description: account id from data base
         queueType:
           $ref: '#/components/schemas/QueueTypeModel'
+        action:
+          $ref: '#/components/schemas/ActionType'
     QueueTypeModel:
       type: string
       enum:
       - simple_queue
       - floating_queue
       example: simple_queue
+    ActionType:
+      type: string
+      enum:
+        - entry
+        - exit
+      example: entry
     SignInRequest:
       type: object
       required:
@@ -532,6 +523,12 @@ components:
             $ref: '#/components/schemas/ErrorResponse'
     NotFound:
       description: The specified resource was not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Conflict:
+      description: Conflict exception
       content:
         application/json:
           schema:

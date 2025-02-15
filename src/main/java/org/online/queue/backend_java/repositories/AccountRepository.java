@@ -13,8 +13,6 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
     @Query("SELECT a FROM Account a LEFT JOIN FETCH a.positions LEFT JOIN FETCH a.credentials WHERE a.id = :accountId")
     Optional<Account> findByIdWithPositionsAndCredentials(Long accountId);
 
-    Optional<Account> findByUsername(String username);
-
     @Query("select a from Account a join fetch a.credentials where a.credentials.id = :credentialsId")
     Optional<Account> findByIdWithCredentials(Long credentialsId);
 }

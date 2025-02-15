@@ -41,6 +41,12 @@ public class Position implements Serializable {
     @Column(name = "queue_number")
     Integer queueNumber;
 
+    public Position() {}
+
+    public Position(Integer queueNumber) {
+        this.queueNumber = queueNumber;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

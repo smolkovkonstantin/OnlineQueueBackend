@@ -30,9 +30,9 @@ public class QueueControllerImpl implements QueueApi {
     }
 
     @Override
-    public ResponseEntity<QueueResponse> updateQueue(Long queueId, QueueUpdateRequest queueUpdateRequest) {
-        var updateQueueResponse = queueService.update(queueUpdateRequest, queueId);
-        return new ResponseEntity<>(updateQueueResponse, HttpStatus.OK);
+    public ResponseEntity<Void> updateQueue(Long queueId, QueueUpdateRequest queueUpdateRequest) {
+        queueService.update(queueUpdateRequest, queueId);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @Override
@@ -43,18 +43,12 @@ public class QueueControllerImpl implements QueueApi {
     }
 
     @Override
-    public ResponseEntity<Void> entryToQueue(Long queueId, Long userId, QueuePositionRequest queuePositionRequest) {
+    public ResponseEntity<Void> patchQueue(Long queueId, QueuePositionRequest queuePositionRequest) {
 
-        queueService.entryInQueue(queueId, userId, queuePositionRequest);
-
-        return new ResponseEntity<>(HttpStatus.OK);
-    }
-
-    @Override
-    public ResponseEntity<Void> exitFromQueue(Long queueId,
-                                              Long userId,
-                                              QueuePositionRequest queuePositionRequest) {
-        queueService.exitFromQueue(queueId, userId, queuePositionRequest);
+        switch (queuePositionRequest.getAction()) {
+            case ENTRY -> queueService.entryInQueue(queueId, queuePositionRequest.getAccountId(), queuePositionRequest);
+            case EXIT -> queueService.exitFromQueue(queueId, queuePositionRequest.getAccountId(), queuePositionRequest);
+        }
 
         return new ResponseEntity<>(HttpStatus.OK);
     }

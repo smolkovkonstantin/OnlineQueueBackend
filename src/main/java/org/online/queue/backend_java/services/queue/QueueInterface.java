@@ -4,6 +4,7 @@ import org.online.queue.backend_java.models.Queue;
 import org.online.queue.backend_java.models.QueueResponse;
 import org.online.queue.backend_java.models.dto.QueueDto;
 import org.online.queue.backend_java.models.dto.QueuePositionDto;
+import org.springframework.transaction.annotation.Transactional;
 
 public interface QueueInterface {
     /**
@@ -25,15 +26,14 @@ public interface QueueInterface {
      * Add account to queue
      * @param queuePositionDto
      */
-    Queue addUser(QueuePositionDto queuePositionDto);
+    @Transactional
+    void addUser(QueuePositionDto queuePositionDto);
 
     /**
      * Break the link between account and position, queue and position <br>
      * Remove account from queue
      * @param entryQueueDto
      */
-
-    Queue deleteUser(QueuePositionDto entryQueueDto);
-
-    Queue getCachedQueue(Long id);
+    @Transactional
+    void deleteUser(QueuePositionDto entryQueueDto);
 }

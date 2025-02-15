@@ -99,17 +99,6 @@
 			<version>${postgresql.version}</version>
 			<scope>runtime</scope>
 		</dependency>
-		 <dependency>
-			<groupId>org.flywaydb</groupId>
-			<artifactId>flyway-database-postgresql</artifactId>
-			<version>${org.flywaydb}</version>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.flywaydb</groupId>
-			<artifactId>flyway-core</artifactId>
-			<version>${org.flywaydb}</version>
-		</dependency>
 
 
 		<!--Test-->
@@ -242,23 +231,6 @@
 						</configuration>
 					</execution>
 				</executions>
-			</plugin>
-			 <plugin>
-				<groupId>org.flywaydb</groupId>
-				<artifactId>flyway-maven-plugin</artifactId>
-				<version>${org.flywaydb}</version>
-				<configuration>
-					<driver>org.postgresql.Driver</driver>
-					<url>jdbc:postgresql://localhost:5432/OnlineQueue</url>
-					<user>postgres</user>
-					<password>Enter5510</password>
-					<schemas>
-						<schema>main</schema>
-					</schemas>
-					<locations>
-						<location>filesystem:src/main/resources/db/migration</location>
-					</locations>
-				</configuration>
 			</plugin>
 		</plugins>
 	</build>

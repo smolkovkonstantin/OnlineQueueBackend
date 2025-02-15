@@ -51,6 +51,17 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
+    public Account getAccountWithCredentials(Long accountId) {
+        var account = getAccountWithCredentials();
+
+        if (!account.getId().equals(accountId)) {
+            throw new ConflictException(ErrorMessage.USER_NOT_FOUND_BY_ID.createResponseModel(accountId));
+        }
+
+        return account;
+    }
+
+    @Override
     public Account getAccountWithPositionsAndCredentials(Long id) {
         var account = accountRepository.findByIdWithPositionsAndCredentials(id)
                 .orElseThrow(() -> new NotFoundException(ErrorMessage.USER_NOT_FOUND_BY_ID.createResponseModel(id)));
@@ -58,7 +69,7 @@ public class AccountServiceImpl implements AccountService {
         var credentials = credentialsService.getCredentials();
 
         if (!credentials.getId().equals(account.getCredentials().getId())) {
-            throw new ConflictException(ErrorMessage.ATTEMPT_TO_DO_SOMETHING_WITH_ANOTHER_ACCOUNT.createResponseModel());
+            throw new ConflictException(ErrorMessage.PERMISSION_EXCEPTION.createResponseModel());
         }
 
         return account;
@@ -67,20 +78,11 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public void createAccount(CreateAccountDto createAccountDto) {
 
-        checkDuplicateUsername(createAccountDto.getUsername());
-
         var account = new Account()
                 .setFirstName(createAccountDto.getFirstName())
                 .setLastName(createAccountDto.getLastName())
-                .setUsername(createAccountDto.getUsername())
                 .setCredentials(createAccountDto.getCredentials());
 
         accountRepository.saveAndFlush(account);
-    }
-
-    private void checkDuplicateUsername(String username) {
-        accountRepository.findByUsername(username).ifPresent((account) -> {
-            throw new ConflictException(ErrorMessage.DUPLICATE_USERNAME.createResponseModel());
-        });
     }
 }

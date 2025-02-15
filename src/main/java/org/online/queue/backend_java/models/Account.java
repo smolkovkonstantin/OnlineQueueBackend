@@ -41,9 +41,6 @@ public class Account implements Serializable {
     @Column(name = "last_name")
     String lastName;
 
-    @Column(name ="username")
-    String username;
-
     @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
     List<Position> positions = new ArrayList<>();
 
